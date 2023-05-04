@@ -1,6 +1,9 @@
 package com.polarbookshop.orderservice.domain;
 
 import org.springframework.stereotype.Service;
+import com.polarbookshop.orderservice.book.BookClient;
+import com.polarbookshop.orderservice.book.Book;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -8,7 +11,10 @@ import reactor.core.publisher.Mono;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    public OrderService(OrderRepository orderRepository) {
+    private final BookClient bookClient;
+
+    public OrderService(OrderRepository orderRepository, BookClient bookClient) {
+        this.bookClient = bookClient;
         this.orderRepository = orderRepository;
     }
 
@@ -17,8 +23,15 @@ public class OrderService {
     }
 
     public Mono<Order> submitOrder(String isbn, int quantity) {
-        return Mono.just(buildRejectedOrder(isbn, quantity))
+        return bookClient.getBookByIsbn(isbn)
+                .map(book -> buildAcceptedOrder(book, quantity))
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.just(buildRejectedOrder(isbn, quantity)))
+                .defaultIfEmpty(buildRejectedOrder(isbn, quantity))
                 .flatMap(orderRepository::save);
+    }
+
+    public static Order buildAcceptedOrder(Book book, int quantity) {
+        return Order.of(book.isbn(), book.title() + " - " + book.author(), book.price(), quantity, OrderStatus.ACCEPTED);
     }
 
     public static Order buildRejectedOrder(String bookIsbn, int quantity) {
