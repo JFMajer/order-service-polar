@@ -18,4 +18,12 @@ public record OrderRequest(
 ) {
 
 
+        public String getIsbn() {
+                return isbn;
+        }
+
+
+        public int getQuantity() {
+                return quantity;
+        }
 }
