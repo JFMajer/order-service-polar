@@ -55,7 +55,7 @@ public class OrderService {
                 .flatMap(orderRepository::save);
     }
 
-    public static Order buildDispatchedOrder(Order existingOrder) {
+    public Order buildDispatchedOrder(Order existingOrder) {
         return new Order(
                 existingOrder.id(),
                 existingOrder.bookIsbn(),
