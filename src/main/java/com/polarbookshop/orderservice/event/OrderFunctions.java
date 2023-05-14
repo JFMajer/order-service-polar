@@ -19,3 +19,4 @@ public class OrderFunctions {
                 .doOnNext(order -> log.info("Order {} dispatched", order.id()))
                 .subscribe();
 }
+}
